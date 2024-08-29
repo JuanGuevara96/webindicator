@@ -1,0 +1,38 @@
+# Ignorar directorios de Composer
+/vendor/
+
+# Archivos de configuración específicos del entorno
+.env
+.env.local
+.env.*.local
+.env.test
+.env.*.test
+
+# Ignorar archivos de logs
+*.log
+
+# Ignorar caché y sesiones
+/cache/
+*.cache
+/tmp/
+*.tmp
+/sessions/
+/build/
+
+# Ignorar archivos de configuración del IDE
+/.idea/
+/.vscode/
+
+# Ignorar archivos generados por el sistema operativo
+.DS_Store
+Thumbs.db
+
+# Ignorar otros archivos y directorios específicos del proyecto
+/.htaccess
+/public/uploads/
+/node_modules/
+/coverage/
+/tests/_output/
+
+# Ignorar Archivos de Pruebas o Inecesarios para el programa.
+test.php

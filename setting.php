@@ -1,7 +1,7 @@
 <?php session_start();
-require "views/header2.php";
 require "config/conn.php";
-
+require_once "views/header.php";
+// include_once "views/datebox.view.php";
 ?>
 <!-- <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
 <script src="js/all.js"></script>
@@ -16,9 +16,10 @@ require "config/conn.php";
   		<div class="flex-md-column">
 			<h2>Capture settings ER</h2>
   		
-			<div><!--inicio fecha mes -->
+			<!--inicio fecha mes -->
+			<div>
 			  <form id="c_month">
-			  	<div class="input-group input-group-sm">
+			  	<div id="datebox" class="input-group input-group-sm">
 				  	<div class="input-group-prepend">
 	    				<span class="input-group-text bg-success"><i class="fas fa-calendar fa-inverse"></i></span>
 	  				</div>
@@ -35,7 +36,7 @@ require "config/conn.php";
 				    </select>
 				</div>
 			  </form>
-			</div> <!-- fin form checha -->
+			</div> <!-- fin form  -->
 
 			<form id="ERdata" method="post">
 			<fieldset class="form-group">
@@ -64,8 +65,8 @@ require "config/conn.php";
 			</fieldset>
 			  <div class="form-group">
 			  <label>Company/Empresa</label>
-			  <select name="company" class="form-control text-left">
-			  	<!-- metodo colER() Jquery -->
+			       <select name="company" class="form-control text-left">
+			  <!-- metodo colER() Jquery -->
 	          </select>
 			  </div>
 			  <div class="form-group">
@@ -86,8 +87,12 @@ require "config/conn.php";
    			  </div> 			  
 		      	<button id="btn_saveER" type="submit" class="btn btn-success my-3 btn-block">Save <i class="fas fa-save"></i></button>
 		        <div id="msg-capture" class="msg"></div>
-			</form>
 
+		        <div class="col-12 d-flex flex-wrap align-content-center">
+					  <button type="button" id="btn_capture" class="btn btn-secondary w-100">Expand Capture
+					  </button>			  
+		  		</div>
+			</form>
   		</div>
   	</div>
   	<div class="col-md-4 d-flex justify-content-center p-2">
@@ -115,13 +120,25 @@ require "config/conn.php";
   	</div>
   	<div class="col-md-4 d-flex justify-content-center p-2">
   		<div class="flex-md-row w-100">
-  		<h2>INFOFIN REPORT
-  		<button id="btn_ER600" type="submit" class="btn btn-success" style="vertical-align: top;">Execute <i class="fas fa-bolt"></i></button></h2>
-  			<div id="ERxCompany" style="overflow-y: auto; height: 30em;">	
-  			<div id="spinner2" class="text-center">
-			<!-- insertado por js -->
-			</div>
-  			<!-- tabla metodo js ERxC -->
+  			<h2>INFOFIN REPORT
+  			<button id="btn_ER600" type="submit" class="btn btn-success" style="vertical-align: top;">Execute <i class="fas fa-bolt"></i></button></h2>
+				<div style="overflow-y: auto; height: 30em;">
+				  	<table class="table table-bordered">
+					  <thead class="thead-light">
+						  <tr>
+							  <th>Concepto</th>
+							  <th>Mes</th>
+							  <th>Acumulado</th>
+							</tr>
+						</thead>
+						<!-- <div id="ERxCompany" style="overflow-y: auto; height: 30em;">	 -->
+							<!-- tabla metodo js ERxC -->
+						<tbody id="ERxCompany"  style="overflow-y: auto; height: 30em;">
+							<div id="spinner2" class="text-center"></div>
+							<!-- tabla metodo js tablaERdata()-->
+						</tbody>
+					</table>
+				</div>
   			</div>
   		</div>
   	</div>
@@ -137,7 +154,7 @@ var monthName = [ "January", "February", "March", "April", "May", "June","July",
 	$(document).ready(function(){
 		colER(); //muestra compañias x tipo
 		renER(); //muestra conceptos x tipo 
-		tableERdata();//muestra tabla de datos
+		// tableERdata();//muestra tabla de datos
 		nextMonth();//muestra siguiente mes
 	    
 	    $("input[name=rdtype]").on('change', function() {
@@ -165,19 +182,6 @@ var monthName = [ "January", "February", "March", "April", "May", "June","July",
 
 	});
 
-function colER(){
-    var rdtype = $('#ERdata input[name=rdtype]:checked').val();
-    $.ajax( {
-      url: "op/op.php",
-      method: "GET",
-      global: false,
-      data: {type: rdtype, op: "companies", section: ""},
-      async: false,
-      success: function(tb) {
-        $("#ERdata select[name=company]").html(tb);
-      }           
-    });
-}
 
 function renER(){
     var rdtype = $('#ERdata input[name=rdtype]:checked').val();
@@ -201,34 +205,34 @@ function nextMonth(){
   $("#rdpy").next().text("Projection " + monthName[new Date(datenow).getMonth()] + " " + year);
 }
 
-function tableERdata() {
-  var company = $("#ERdata select[name=company]").val();
-  if (company >= 800 && company < 900)
-      $("#ERdata #inputmoneda").text("DLL $");
-  else
-      $("#ERdata #inputmoneda").text("MXN $");
-  var nMonth = $("#c_month select[name='month']").val();
-  var nYear = $("#c_month select[name='year']").val();
-  var type = $("#ERdata input[name=rdtype]:checked").val();
-      $.ajax( {
-      url: "op/op.php",
-      method: "GET",
-      global: false,
-      data: {idcompany: company, month: nMonth, year: nYear, op: "queryER", type_c: type, section: ""},
-      //async: false,
-      beforeSend: function() {
-        // setting a timeout
-       $("#tbERdata").html("");
-       $("#spinner").append('<div class="spinner-grow" role="status"><span class="sr-only">Loading...</span></div>');//crea spinner de carga.
-      },
-      success: function(tb) {
-        $("#tbERdata").html(tb);
-      },
-      complete: function(){
-      	 $("#spinner div").remove(".spinner-grow");//elimina spinner
-      }
-    });
-}
+// function tableERdata() {
+//   var company = $("#ERdata select[name=company]").val();
+//   if (company >= 800 && company < 900)
+//       $("#ERdata #inputmoneda").text("DLL $");
+//   else
+//       $("#ERdata #inputmoneda").text("MXN $");
+//   var nMonth = $("#c_month select[name='month']").val();
+//   var nYear = $("#c_month select[name='year']").val();
+//   var type = $("#ERdata input[name=rdtype]:checked").val();
+//       $.ajax( {
+//       url: "op/op.php",
+//       method: "GET",
+//       global: false,
+//       data: {idcompany: company, month: nMonth, year: nYear, op: "queryER", type_c: type, section: ""},
+//       //async: false,
+//       beforeSend: function() {
+//         // setting a timeout
+//        $("#tbERdata").html("");
+//        $("#spinner").append('<div class="spinner-grow" role="status"><span class="sr-only">Loading...</span></div>');//crea spinner de carga.
+//       },
+//       success: function(tb) {
+//         $("#tbERdata").html(tb);
+//       },
+//       complete: function(){
+//       	 $("#spinner div").remove(".spinner-grow");//elimina spinner
+//       }
+//     });
+// }
 
 //input numbers format comma with decimals
   $("input[name=valnum]").keyup(function(event) {
@@ -275,13 +279,14 @@ function ERxC() {
       method: "post",
       global: false,
       data: {er: "ERxCompany", idcompany: company, month: nMonth, year: nYear},
-      //async: false,
+      async: false,
       beforeSend: function() {
         // setting a timeout
        $("#ERxCompany").html("");
        $("#spinner2").append('<div class="spinner-grow" role="status"><span class="sr-only">Loading...</span></div>');//crea spinner de carga.
       },
       success: function(tb) {
+		  console.log(tb);
         $("#ERxCompany").html(tb);
       },
       complete: function(){
@@ -292,6 +297,7 @@ function ERxC() {
 
 
 </script>
+<script src="js/ERcapture.js"></script>
 <?php
 //include_once "views/footer.view.php";
  ?>

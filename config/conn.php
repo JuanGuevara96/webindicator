@@ -1,21 +1,24 @@
 <?php 
 require "global.php";
+require_once "oconn.php";
+
 //error_reporting(E_ERROR); //desactiva los mensajes de error de php
 $conn = new mysqli(DB_HOST,DB_USERNAME,DB_PASSWORD,DB_NAME);
 $oci = oci_connect(ORCL_USERNAME,ORCL_PASSWORD, ORCL_INSTEAD); //error, si tarda en conectar. 
-if ((!$oci) || ($conn->connect_error)) {
+if (($conn->connect_error)) {
  	echo'<script type="text/javascript">alert("Connection error of database, try it again");</script>'; 
  } 
 mysqli_query( $conn, 'SET NAMES "'.DB_ENCODE.'"');
-
+date_default_timezone_set('America/Mexico_City');
 	function squery($sql)
 	{
-		global $conn;
+		$conn = new mysqli(DB_HOST,DB_USERNAME,DB_PASSWORD,DB_NAME);
 		mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 		$query = $conn->query($sql);		
 		while($row = $query->fetch_assoc()){
 			$push[] = $row;
 		}
+		$conn->close();
 		if (isset($push)) 
 			return $push;
 		else 
@@ -25,7 +28,7 @@ mysqli_query( $conn, 'SET NAMES "'.DB_ENCODE.'"');
 	function equery($sql)
 	{
 		global $conn;
-		mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+		// mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 		mysqli_real_escape_string($conn,$sql);
 		return $conn->query($sql);
 	}
@@ -51,13 +54,38 @@ mysqli_query( $conn, 'SET NAMES "'.DB_ENCODE.'"');
 		$statement->execute(array(
 			'usuario' => $user,
 			'password' => $password
-		)); 
+		));
+		$statement->bindColumn('ID', $iduser); 
 		$statement->bindColumn('sections', $sections);
 		$statement->bindColumn('name', $name);
 		$result = $statement->fetch(PDO::FETCH_BOUND);
 		$_SESSION['sections'] = $sections; 
 		$_SESSION['name'] = $name;
+		$_SESSION['ID'] = $iduser;
 		return $result;
+	}
+
+	function query_table($sql){
+		$conn = new mysqli(DB_HOST,DB_USERNAME,DB_PASSWORD,DB_NAME);
+		$query = $conn->query($sql);
+		if ($query) {
+			if(mysqli_num_rows($query)){		
+				while($data = $query->fetch_assoc()){
+					$arreglo['data'][] = array_map("utf8_encode",$data);
+				}
+				mysqli_free_result($query);
+				mysqli_close($conn);
+				return json_encode($arreglo);
+			}
+			else{
+				mysqli_close($conn);
+				return json_encode('{"data": []}');
+			}
+		}
+		else{
+			mysqli_close($conn);
+			return;
+		}
 	}
 
 	function sqlclean($str) // verificar
@@ -74,27 +102,12 @@ mysqli_query( $conn, 'SET NAMES "'.DB_ENCODE.'"');
 
 	function sqllogin()
 	{
-		return 'SELECT usuario, pass, sections, name FROM users WHERE usuario = :usuario AND pass = :password';
+		return 'SELECT ID, usuario, pass, sections, name FROM users WHERE usuario = :usuario AND pass = :password';
 	}
+	
 	function sqlpopup($Id)
 	{
 		return 'SELECT idaccount FROM accounts WHERE idcompany = '.$Id;
-	}
-
-	function sqlmov($idcompany,$idaccount, $auxlastmov){
-		global $oci; $lastmov = ''; 
-		$sql = 'select ctad_fecult from ctb_cuentas where ctbs_cia = '.$idcompany.' AND ctac_cta = '.$idaccount;
-		$stmt = oci_parse($oci,$sql);
-		oci_define_by_name($stmt, 'CTAD_FECULT', $lastmov);
-		oci_execute($stmt);
-		if(!oci_fetch($stmt))
-		{echo "<br>ID: ".$idcompany ." cuenta: ". $idaccount;}
-			if (strtotime($lastmov) < strtotime($auxlastmov)) { //compara fechas mayor o menor
-				$lastmov = $auxlastmov;
-			}
-		//echo "<pre>";print_r($lastmov);
-		oci_free_statement($stmt);
-		return $lastmov;
 	}
 
 	function sqldata_pres(){ 
@@ -120,6 +133,18 @@ mysqli_query( $conn, 'SET NAMES "'.DB_ENCODE.'"');
 		PN_EMPRESA=>:idcompany,PN_EJERCICIO_MES => :date, PC_CUENTA=>:idaccount, PN_MONEDA=>:moneda,PN_INCMVTOSNOAF=>:incmovnoafec,PN_SALDOINI=>:PN_SALDOINI,PN_MOVNETOS=>:movnetos,PN_CARGOS=>:cargos,PN_CREDITOS=>:creditos,PN_SALDOFIN=>:saldofin,PN_AAMMSALDO=>:PN_AAMMSALDO,PC_NOMBRE_CTA=>:PC_NOMBRE_CTA,PN_NATURALEZA_CTA=>:PN_NAT, PN_PRESUP_MENSUAL=>:pm, PN_PRESUP_ACUMULADO=>:PN_PRESUP_ACUMULADO, PC_MENSAJE_ERR=>:PC_MENSAJE_ERR, PC_NUMPRE=>:PC_NUMPRE); 
 		END;';
 	}
+	function sql_calcula($idcompany,$report,$date){
+		return "DECLARE PN_IDIOMA NUMBER;EMPRESA NUMBER;NUMREP NUMBER;AAMM NUMBER;SALIDA NUMBER;
+			BEGIN PN_IDIOMA := 1;EMPRESA := $idcompany;NUMREP := $report;AAMM := $date;
+			SPCP_CALCULO_EEFF(
+		     PN_IDIOMA => PN_IDIOMA,
+		     EMPRESA => EMPRESA,
+		     NUMREP => NUMREP,
+		     AAMM => AAMM,
+		     SALIDA => SALIDA
+		   ); END;";
+	}
+
 	function numabs($n){
 		return ABS($n);
 	}
@@ -138,14 +163,25 @@ mysqli_query( $conn, 'SET NAMES "'.DB_ENCODE.'"');
 		}
 		return $var2;
 	}
-	function microtime_float()
-	{
+	function microtime_float() {
 		list($useg, $seg) = explode(" ", microtime());
 		return ((float)$useg + (float)$seg);
 	}
+
+	function oci_lastMov($idcompany,$idaccount, $auxlastmov){
+		$lastmov = ''; 
+		$oci = new ociDB();
+		$oci->connect();
+		$sql = 'select ctad_fecult CAMPO from ctb_cuentas where ctbs_cia = '.$idcompany.' AND ctac_cta = '.$idaccount;
+		$lastmov = $oci->getRow($sql);
+			if (strtotime($lastmov) < strtotime($auxlastmov)) { //compara fechas mayor o menor
+				$lastmov = $auxlastmov;
+			}
+		return $lastmov;
+	}
+
 	function ocifunction($idcompany, $date, $idaccount, $numpre){
 		global $oci;
-		$stmt = oci_parse($oci,sqldata_pres());
 
 				$PM = array(
 				':idcompany' => $idcompany,
@@ -167,6 +203,7 @@ mysqli_query( $conn, 'SET NAMES "'.DB_ENCODE.'"');
 				':PC_NUMPRE' => $numpre
 				);
 
+		$stmt = oci_parse($oci,sqldata_pres());
 				foreach ($PM as $key => $value) {
 					oci_bind_by_name($stmt, $key, $PM[$key],200); //warning buffer error
 				}
@@ -175,6 +212,29 @@ mysqli_query( $conn, 'SET NAMES "'.DB_ENCODE.'"');
 					oci_execute($stmt); //query execute again for error spctb procedure.
 					}
 		oci_free_statement($stmt);			 
+		return $PM;
+	}
+
+	function ociPM($idcompany, $date, $idaccount, $numpre){
+		$PM = array(
+		':idcompany' => $idcompany,
+		':date' => $date,
+		':idaccount' => $idaccount,
+		':moneda' => 0,
+		':incmovnoafec' => 0,
+		':PN_SALDOINI' => '',
+		':movnetos' => '',
+		':cargos' => '',
+		':creditos' => '',
+		':saldofin' => '',
+		':PN_AAMMSALDO' => '',
+		':PC_NOMBRE_CTA' => '',
+		':PN_NAT' => '', 
+		':pm' => '',
+		':PN_PRESUP_ACUMULADO' => '',
+		':PC_MENSAJE_ERR' => '',
+		':PC_NUMPRE' => $numpre
+		);
 		return $PM;
 	}
 
@@ -187,34 +247,18 @@ mysqli_query( $conn, 'SET NAMES "'.DB_ENCODE.'"');
 		}
 		return false;
 	}
-	// function dateshow($date){
-	// 	//date to month or diary
-	// 	if (date('Ym') == date('Ym',strtotime($date))) {
-	// 		return date('F j, Y');
-	// 	}
-	// 	else {
-	// 		return date('F t, Y', strtotime($date));
-	// 	}
-	// }
-	function pold_count($idcompany, $dateshow){
-		$month = substr($dateshow, 0, 3);
-		$year = substr($dateshow, -2, 2);
-		global $oci;
-		//*nota optimizar codigo
-		if ($idcompany != 807) { 
-			$sql = "select count(*) FPOLIZAS from ctb_polizas 
-				where (POLY_STATUS=1 OR POLY_STATUS=0) and POLD_FECHA like '%".strtoupper($month)."-".$year."' and ctbs_cia = ".$idcompany;
-		}
-		else{
-			$sql = "select count(*) FPOLIZAS from ctb_polizas 
-				where (POLY_STATUS=1 OR POLY_STATUS=0) and POLD_FECHA like '%".strtoupper($month)."-".$year."' and (ctbs_cia = '807' OR ctbs_cia = '808' OR ctbs_cia = '812' OR ctbs_cia = '816' OR ctbs_cia = '817')";
-		}
-		$stmt = oci_parse($oci,$sql);
-		oci_define_by_name($stmt, 'FPOLIZAS', $pold);
-		oci_execute($stmt);
-		oci_fetch($stmt);
-		oci_free_statement($stmt);
-		return $pold;
+
+	function pold_count($idcompany, $dateshow){ //funcion que muestra la cantidad de polizas sin afectar.
+		$oci = new ociDB();
+		$oci->connect();
+		
+		$date = date("Ym", strtotime($dateshow));
+		$sql = "select count(poli_folio) c_polizas from ctb_polizas 
+		where (POLY_STATUS=1 OR POLY_STATUS=0) and poli_aammejer = '$date'  and ctbs_cia = ".$idcompany;
+		
+		$result = $oci->getRows($sql);
+		$oci->close();
+		return $result[0]['C_POLIZAS'];
 	}
 
 	function sqlpold($idcompany, $dateshow){
@@ -245,21 +289,11 @@ mysqli_query( $conn, 'SET NAMES "'.DB_ENCODE.'"');
 		oci_execute($stmt);
 		return $stmt;
 	}
-	function sql_calcula($idcompany,$rep,$date){
-		return "DECLARE PN_IDIOMA NUMBER;EMPRESA NUMBER;NUMREP NUMBER;AAMM NUMBER;SALIDA NUMBER;
-			BEGIN PN_IDIOMA := 1;EMPRESA := $idcompany;NUMREP := $rep;AAMM := $date;
-			SPCP_CALCULO_EEFF(
-		     PN_IDIOMA => PN_IDIOMA,
-		     EMPRESA => EMPRESA,
-		     NUMREP => NUMREP,
-		     AAMM => AAMM,
-		     SALIDA => SALIDA
-		   ); END;";
-	}
+
 
 	function oci_query($sql, $mode){
 		//modficado 2020-e e-06
-		global $oci; //$push = array();
+		global $oci;
 		$stmt = oci_parse($oci,$sql);
 		oci_execute($stmt);
 		while ($row = oci_fetch_array($stmt, $mode)) {
@@ -271,12 +305,22 @@ mysqli_query( $conn, 'SET NAMES "'.DB_ENCODE.'"');
 		//falta return null
 	}
 
+	function MultiArrtoList($arr, $column){
+	//convierte array multidimensional en lista IN, [(1,2,3)]
+		 $list="";
+		 // $arraymap = array_map('current', $arr);
+		 foreach ($arr as $value) {
+		 	$list .= ", ".$value[$column];
+		 }
+		 return $list = substr($list, 1);
+	}
+
 	function arrtoList($arr){
 	//convierte array multidimensional en lista IN, [(1,2,3)]
 		 $list="";
-		 $arraymap = array_map('current', $arr);
-		 foreach ($arraymap as $value) {
-		 	$list .= ", '$value'";
+		 // $arraymap = array_map('current', $arr);
+		 foreach ($arr as $value) {
+		 	$list .= ", ".$value;
 		 }
 		 return $list = substr($list, 1);
 	}	 

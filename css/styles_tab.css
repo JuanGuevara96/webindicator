@@ -1,3 +1,15 @@
+div.divBorder {
+  border: 4px outset rgba(164,157,157,0.4);
+  border-radius: 15px;
+  display: inline-table;
+  background-color: rgba(164,157,157,0.1);
+  padding: 0;
+  margin: 8px 12px;
+}
+
+#global {
+  background-color: oldlace;
+}
 .pmsales, .pmgv, .pmga{
   color: blue;
 }
@@ -7,32 +19,19 @@
   color: green;
 }
 
-h2 {
-  text-align: center;
-  margin: 50px 0 2px 0;
-}
-h2:first-of-type {
-  text-align: center;
-  margin: 40px 0 2px 0;
+ td.py {
+  color: steelblue;
 }
 
-div.divBorder {
-  border: 4px outset rgba(164,157,157,0.4);
-  border-radius: 15px;
-  display: inline-table;
-  background-color: rgba(164,157,157,0.1);
-  padding: 0;
-  margin: 8px 12px;
-
-}
-#global {
-  background-color: oldlace;
+.table td, .table th {
+  vertical-align: middle;
 }
 
+.nav-sections .container{
+  position: fixed;
+  z-index: 1030;
+}
 
-  #plus{
-    padding: 0.5px 0;
-  }
 
   .section{
     width: 82%;
@@ -63,14 +62,6 @@ div.divBorder {
     align-items: flex-start;
   }
 
-  h3 {
-    text-align: right;
-    font-size: 12px;
-    margin: 0;
-    margin-right: 10%;
-    text-transform: uppercase;
-  }
-
 @media screen and (max-width: 50em /*500px*/) {
   .full{display: none;}
   .media {display: inline-table;}
@@ -84,85 +75,3 @@ div.divBorder {
   }
 
 
-.down{
- width: 100%;
- justify-content: flex-end;
- display: flex;
- margin: 6px;
-}
-
-/* The Modal (background) */
-.modal {
-  display: none; /* Hidden by default */
-  position: fixed; /* Stay in place */
-  z-index: 1; /* Sit on top */
-  left: 0;
-  top: 0;
-  width: 100%; /* Full width */
-  height: 100%;  /* Full height */
-  /*overflow: auto;*/
-  background-color: rgb(0,0,0); /* Fallback color */
-  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-}
-
-/* Modal Content/Box */
-.modal-content {
-  background-color: #fefefe;
-  margin: 5% auto 20% auto;
-  padding: 20px;
-  padding-bottom: 40px;
-  border: 1px solid #888;
-  width: 30%; /* Could be more or less, depending on screen size */
-}
-
-/* The Close Button */
-.close {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-  margin: -10px auto;
-}
-
-.close:hover,
-.close:focus {
-  color: black;
-  text-decoration: none;
-  cursor: pointer;
-}
-  #listafiles li{
-  cursor: pointer;
-}
-  #listafiles ul{
-    border-top: 1px solid gray;
-    border-bottom: 1px solid gray;
-    padding: 14px;
-    margin-top: 2em;
-  }
-   .selected{
-      background-color: lightblue;
-    }
-  #btn_download{
-    float: right;
-  }
-
-  li.list {
-    padding: 6px;
-  }
-
-.modal-content-download{
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  width: 80%;
-  margin: 4px auto;
-}
-
- 
- button[id*="btn_download"]{
-    margin-bottom: 10px;
- }
-
- td.py {
-  color: steelblue;
-}

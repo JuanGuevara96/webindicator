@@ -1,0 +1,12 @@
+--boton download
+--carpetas de archivos
+--polizas totales y por cada una
+--php files ordenadas en carpeta public
+--boton download arreglado 
+--carpeta vendor phpoffice
+--phptoexcel creacion de archivo datos
+--scripts y macros adjuntos 
+--Inmobiliaria falta depurar archivos
+--botones de data, app, download file
+--inmobiliaria carpetas y archivos falta depurar
+--htmltopptx, uso de pptxGenJs

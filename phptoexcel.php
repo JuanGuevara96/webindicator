@@ -4,6 +4,7 @@ include 'vendor/autoload.php';
 	use PhpOffice\PhpSpreadsheet\Spreadsheet;
 	use PhpOffice\PhpSpreadsheet\NamedRange;
 	use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+	echo "flag";
 $section = "ENERGETICOS";
 $dateshow = "201908";//$_GET['dateshow'];
 $tiempo_inicio = microtime_float();
@@ -38,7 +39,7 @@ if (!$oci) {
     trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
 }
 	//sentencia sql reportes
-	$r_col = oci_query("select infs_columna as COLUMNA, colc_titulo as TITULO, colc_subtitulo SUBTITULO from inf_columnas where ctbs_cia = '$idcompany' and infi_reporte = '$report' order by infs_columna");
+	$r_col = oci_query("select infs_columna as COLUMNA, colc_titulo as TITULO, colc_subtitulo SUBTITULO from inf_columnas where ctbs_cia = '$idcompany' and infi_reporte = '$report' order by infs_columna", OCI_ASSOC+OCI_RETURN_NULLS);
 	$sql = 'Select infs_renglon RENGLON, RENC_DESCRIPCION CONCEPTO';
 	for ($i=0; $i < count($r_col); $i++)
 		$sql.=',renf_valor'.$r_col[$i]['COLUMNA'].' "'.$r_col[$i]['TITULO'].' '.$r_col[$i]['SUBTITULO'].'"'; 

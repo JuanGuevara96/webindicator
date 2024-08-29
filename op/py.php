@@ -1,5 +1,6 @@
 <?php 
 require '../config/conn.php';
+
 if (isset($_POST['pyyear']) && isset($_POST['pymonth']) && isset($_POST['section'])){
 	$year = htmlspecialchars($_POST['pyyear']);
 	$dateFormat = $year."-".htmlspecialchars($_POST['pymonth']);
@@ -9,7 +10,7 @@ if (isset($_POST['pyyear']) && isset($_POST['pymonth']) && isset($_POST['section
  	$cdate = date('Y-m-d'); //current date capture
 	switch ($_POST['rdaut']) {
 	case 'aut':
-		$sql = "SELECT distinct(subcompany) FROM company where section = '$section'";
+		$sql = "SELECT distinct(subcompany) FROM company where idsection = '$section'";
 		if ($idcompany != 0){
 			$sql .= " AND idcompany = '$idcompany'"; //continuar, verificar seleccion de 1 compañia o varias
 		}
@@ -43,15 +44,31 @@ if (isset($_POST['pyyear']) && isset($_POST['pymonth']) && isset($_POST['section
 			$status = equery("INSERT INTO proyec (idcompany, pydate, section, netsales, opexp, gaexp, c_date) VALUES ('$idcompany', '$date', '$section', '$netsales', '$opexp', '$gaexp', '$cdate') ON DUPLICATE KEY UPDATE netsales = '$netsales', opexp = '$opexp', gaexp = '$gaexp', c_date = '$cdate'");
 			if (!$status) echo $status;
 		break;
+
 	}
 }
+
+if (isset($_POST['py']) && isset($_POST['section'])) {
+	$section = sqlclean($_POST['section']);
+	$html = '<option id="all_id" value="0">--- all companies ---</option>';
+	if ($_POST['py'] == 'proyname') {
+		$arrcom = squery("SELECT idcompany, company FROM company WHERE idsection = '$section' ");
+		for ($i=0; $i < count($arrcom); $i++) { 
+				$html .= "<option value='".$arrcom[$i]['idcompany']."'> ".$arrcom[$i]['company']." </option>";
+			}
+		echo $html; 
+	}
+}
+
+
+ /*----------- FUNCIONES --------------*/
 
  function calcMonth($date, $idcompany){
  	global $section; global $year;
  	$arr = oquery("SELECT divisor FROM company WHERE idcompany = '$idcompany'");
  	$arrcom = squery("SELECT C.idcompany, A.idaccount, A.type, A.op, P.numpre, C.divisor FROM 
 dbwebindicator.company C INNER JOIN dbwebindicator.accounts A ON C.idcompany=A.idcompany LEFT JOIN dbwebindicator.presup P ON 
-C.idcompany=P.idcompany  AND P.ejercicio = '$year' WHERE C.section = '$section' AND C.subcompany = '$idcompany' ORDER BY type, C.idcompany");
+C.idcompany=P.idcompany  AND P.ejercicio = '$year' WHERE C.idsection = '$section' AND C.subcompany = '$idcompany' ORDER BY type, C.idcompany");
 	$length = count($arrcom);
 	$sum = ['netsales' => 0,'netgv'=>0, 'netga' =>0];
 	for ($i=0; $i < $length; $i++){
@@ -84,6 +101,7 @@ C.idcompany=P.idcompany  AND P.ejercicio = '$year' WHERE C.section = '$section' 
  	}
 	return $py;
  }
+
 function calcxday($ref){
 	global $date;
 	//format date Ym;

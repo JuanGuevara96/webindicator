@@ -8,9 +8,10 @@
 
 var arrclass = ["netsales", "netgv", "netga", "pmsales", "pmgv", "pmga", "varsales", "vargv", "varga", "pyvarsales","pyvargv","pyvarga"];
 var arrporcent = ["porcentsales", "porcentgv", "porcentga", "pyporcentsales","pyporcentgv","pyporcentga"];
+
 	$('.section').each(function (index, value) {
+
 		var idsection = $(this).attr('id');
-		// console.log(index + ':' + idsection);
 		$.each(arrclass, function (index, element) {
 		var sum = 0;
 			$("[id='"+idsection+"'] ."+element).each(function (index) {

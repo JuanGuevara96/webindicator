@@ -16,7 +16,7 @@ require "conn.php" ;
 			        $section .= sqlclean($sections[$i]);
 				}
 			} 		
-			$sql = "INSERT INTO users (ID,usuario,pass,sections,name,visits) VALUES ('$ID','$user','$password','$section','$nombre','0') ON DUPLICATE KEY UPDATE sections = '$section'";
+			$sql = "INSERT INTO users (ID,usuario,pass,sections,name,visits) VALUES ('0','$user','$password','$section','$nombre','0') ON DUPLICATE KEY UPDATE sections = '$section'";
 			$status = equery($sql);		
 			if ($status) {
 				echo "Captura correcta";

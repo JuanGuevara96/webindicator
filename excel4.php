@@ -30,14 +30,14 @@ function data($sheet, $idcompany,$report,$section, $clausula) {
 	$highestRow = $sheet->getHighestRow();
 	$result = oci_query($sql, OCI_ASSOC + OCI_RETURN_NULLS);
 
-	//$colnames = [$section."-".$idcompany, 'CONCEPTO', 'AA', 'PPTO', 'FECHA'];
-	//array_unshift($result, $colnames); //inserta colnames al inicio de la lista
+	$colnames = [$section."-".$idcompany, 'CONCEPTO', 'AA', 'PPTO', 'FECHA'];
+	array_unshift($result, $colnames); //inserta colnames al inicio de la lista
 	$sheet->fromArray(
         $result,   // The data to set
         NULL,        // Array values with this value will not be set
-        'A'.$highestRow  // Top left coordinate of the worksheet range where we want to set these values (default is A1)
+        $highestColumn.'1'  // Top left coordinate of the worksheet range where we want to set these values (default is A1)
     );
-	$highestRow++;
+	$highestColumn++;
 
 
 } //fin de metdo data**********************************************************************************
@@ -92,7 +92,7 @@ function data($sheet, $idcompany,$report,$section, $clausula) {
 					}
 					$clausula = "";
 					//oci_exec(sql_calcula($report['idcompany'],$report['report'],$date));
-					data($sheet, $report['idcompany'],$report['report'],$section, $clausula);
+					data($spreadsheet, $report['idcompany'],$report['report'],$section, $clausula);
 				}
 				unset($reports);
 			}

@@ -1,7 +1,11 @@
 <?php session_start();
-require "views/header.view.php";
+require_once "views/header.php";
 require "config/conn.php";
-$tiempo_inicio = microtime_float();
+//$tiempo_inicio = microtime_float(); start time
+
+  $pvls = equery("select idsection from permisos where idsection = '3' and iduser = ".$_SESSION['ID']);
+  if (!$pvls->fetch_row())
+      header('Location: index.php');
 
  ?>
 <style type="text/css">
@@ -79,17 +83,7 @@ label{
           <option><?php echo date('Y', strtotime('+1 year'));?></option>
         </select>
       </form>
-<!--       <form action="" method="post"
-          name="frmCSVImport" id="frmCSVImport" enctype="multipart/form-data">
-        <div>
-            <span style="color: black;">Choose CSV
-                File</span><input type="file" name="file"
-                id="file" accept=".csv" style="color: black;">
-            <button type="submit" id="submit" name="import"
-                class="button">Import <i class="fas fa-upload"></i></button>
-            <br />
-        </div>
-      </form> -->
+
     </div>
 <section>
   <!-- iniciar fecha con mes actual -->
@@ -124,11 +118,14 @@ label{
   </div>
   </section>
 
-<h2>Capture settings ER</h2>
-<div style="display: flex; align-items: center; flex-direction: row;"> <!-- inicio bloque x empresa -->
+<!-- inicio bloque x empresa -->
+
+<!-- <h2>Capture settings ER</h2>
+<div style="display: flex; align-items: center; flex-direction: row;"> 
 <section>
+ -->
 <!-- capture -->
-  <div style="display: flex;align-items: center;flex-direction: column;border: 2px solid green;border-radius: 6px;margin: 8px;width: 30em;">
+ <!--  <div style="display: flex;align-items: center;flex-direction: column;border: 2px solid green;border-radius: 6px;margin: 8px;width: 30em;">
     <form id="ERdata" method="post" style="padding: 10px;">
 
         <div class="rdbtn" style="display: inline-block; padding-left: 6px;">
@@ -178,12 +175,12 @@ label{
         </tr>
       </thead>
       <tbody id="tbERdata">
-        <!-- insertado x condigo js -->
-      </tbody>
+  -->       <!-- insertado x condigo js -->
+    <!--   </tbody>
     </table>
-  </div>
+  </div> -->
   <!-- final bloque x empresa -->
-</div> 
+<!-- </div>  -->
 
   
 </div> <!-- first div -->
@@ -560,7 +557,7 @@ var stop; //contador para detener el metodo refresh
         //pptx cover page
             var cover = pptx.addNewSlide('exelco');
             cover.addImage({ path:'img/pptx_exelco.png', x:'30%', y:'25%', w:4, h:1.2 });
-            cover.addText(strdate + '\nDIVISIÓN '+ section,  { x:'30%', y:'55%', w:4, h:1, bold:true, fontSize:20, align:'c', lineSpacing:28});
+            //cover.addText(strdate + '\nDIVISIÓN '+ section,  { x:'30%', y:'55%', w:4, h:1, bold:true, fontSize:20, align:'c', lineSpacing:28});
 
         //pptx slides
             result.forEach(function(str) {
@@ -640,5 +637,5 @@ var stop; //contador para detener el metodo refresh
 
 </script>
 <?php 
-include_once "views/footer.view.php";
+include_once "views/footer.php";
  ?>

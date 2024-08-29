@@ -11,18 +11,26 @@
 if (!isset($_SESSION['user'])) { //comprobacion si el user esta logeado
     header('Location: ../index.php');
   }
-require './config/conn.php';
-require_once './config/lifetime.php';
+// require './config/conn.php';
+require "config/oconn.php";
+
 if (isset($_GET['company']) && isset($_GET['date']) && isset($_GET['section']) && isset($_GET['name'])):
-$Id = $_GET['company'];
-$date = $_GET['date'];
+$idcompany = $_GET['company'];
+$date = date("Ym", strtotime($_GET['date']));
 $section = $_GET['section'];
+$name = $_GET['name'];
 if ($section == "USA ALIMENTOS") { //codigo de section irrelevante
    $section = "ALIMENTOS EU";
 }
-$name = $_GET['name'];
 
-echo "<h5>Date: ".$date."</h5><center><h3 id='$Id'>$Id | $name | $section </h3></center><br>";
+//clase conexion oci 
+$oci = new ociDB();
+$oci->connect();
+$sql = "SELECT poli_folio, pold_fecha, polm_totcar, polm_totcre, polc_origen, poly_status, nvl(polc_descrip,' ') polc_descrip
+FROM ctb_polizas 
+where ctbs_cia = '".$idcompany."' and poli_aammejer = '$date' and (poly_status = 0 or poly_status = 1) ORDER BY pold_fecha";
+$array = $oci->getRows($sql, OCI_NUM);
+echo "<h5>Date: ".$_GET['date']."</h5><center><h3 id='$idcompany'>$idcompany | $name | $section </h3></center><br>";
  ?>
  <table class="pTable">
       <thead>
@@ -30,7 +38,7 @@ echo "<h5>Date: ".$date."</h5><center><h3 id='$Id'>$Id | $name | $section </h3><
       </thead>
       <tbody>
         <?php 
-          if (!$array = sqlpold($Id,$date)) {
+          if (!$array) {
             echo "<tr><td colspan='7'>nothing to show...</td></tr>";
           }
           else{
@@ -52,6 +60,8 @@ echo "<h5>Date: ".$date."</h5><center><h3 id='$Id'>$Id | $name | $section </h3><
   </table>
 <?php endif; //end isset?>
 </body>
+
+
 <style type="text/css">
   body{
    background-color: snow; 
@@ -72,6 +82,6 @@ echo "<h5>Date: ".$date."</h5><center><h3 id='$Id'>$Id | $name | $section </h3><
   }
 </style>
 <script type="text/javascript">
-  document.getElementById("807").innerText = "807 | REAL ESTATE | ALIMENTOS EU";
+  //document.getElementById("807").innerText = "807 | REAL ESTATE | ALIMENTOS EU";
 </script>
 </html>

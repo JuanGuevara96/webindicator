@@ -43,11 +43,6 @@ ul.main {
   padding: 0 5px;
 }
 
-form.datebox{ 
-  float: left;
-  margin: 0 8px;
-  position: fixed;
-}
 form.right{
   float: right;
 }

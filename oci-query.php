@@ -15,7 +15,7 @@ include 'vendor/autoload.php';
 // foreach ($array as $id) {
 // 	echo $id['idcompany'];
 // }		
-	 		 $section = "INMOBILIARIA";
+	 		 $section = "CORPORATIVO";
 	// 		// $dir = glob("{files/".$section."/}*.{xlsm,pptx}", GLOB_BRACE); //ruta actual
 	// 		// foreach ($dir as $nombre_fichero) {
 	// 		// 		$string = explode("/", $nombre_fichero);
@@ -124,9 +124,9 @@ include 'vendor/autoload.php';
 	 // $companies = squery("select * from company where section = 'alimentos mx' order by idcompany, section");
 	 // $list = arrtoList($companies);
 
-	 // $result = oci_query("select ctbs_cia EMPRESA, infs_columna as COLUMNA, lower(colc_titulo) as TITULO, colc_subtitulo SUBTITULO from inf_columnas where infs_columna IN (1,2,9) and infi_reporte = 600 and ctbs_cia IN ($list)", OCI_ASSOC);
+	 // // $result = oci_query("select ctbs_cia EMPRESA, infs_columna as COLUMNA, lower(colc_titulo) as TITULO, colc_subtitulo SUBTITULO from inf_columnas where infs_columna IN (1,2,9) and infi_reporte = 600 and ctbs_cia IN ($list)");
 	 
-	 // echo "<pre>";print_r($result);
+	 // //echo "<pre>";print_r($result);
 	 // echo "<pre>";print_r($companies);
 
 // $letters=array('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','aa','ab','ac','ad','ae','af');
@@ -168,25 +168,15 @@ include 'vendor/autoload.php';
 // 	echo $highestColumn;
 // echo "<pre>";print_r($result);
 
-// set_error_handler('myErrorHandler');
-// register_shutdown_function('fatalErrorShutdownHandler');
 
-// echo (5/0);
-// function myErrorHandler($code, $message, $file, $line) {
-//   		echo $message." \nLine ".$line;
-//   }
-// function fatalErrorShutdownHandler()
-// {
-//   $last_error = error_get_last();
-//   if ($last_error['type'] === E_ERROR) {
-//     // fatal error
-//     myErrorHandler(E_ERROR, $last_error['message'], $last_error['file'], $last_error['line']);
-//   }
-// }
+// $dateright = "20";//substr(htmlspecialchars($_GET['year']), 2);
+// $macrokey = substr($section,0,3)."-". $dateright;
+// exec('C:\Users\Administrador\Documents\ConsoleExcel\bin\Debug\ConsoleExcel.exe "inetpub\wwwroot\webindicator\files" "'.$section.'" "Div-'.$macrokey.'.xlsm"');
+// echo 'C:\Users\Administrador\Documents\ConsoleExcel\bin\Debug\ConsoleExcel.exe "inetpub\wwwroot\webindicator\files" "'.$section.'" "Div-'.$macrokey.'.xlsm"';
+session_start();
+// $arr = str_split($_SESSION['sections'], 3);
+// array_push($arr, "REA");
+// print_r($arr);
+echo date('l jS \of F Y h:i:s A');
 
-$result = squery("select sections from users where usuario = 'admin'");
-print_r($result);
-if (in_array("COR",  $result[]))
-	echo "se encontro corporativo";
  ?>
-

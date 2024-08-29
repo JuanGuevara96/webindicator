@@ -5,12 +5,13 @@ include '../vendor/autoload.php';
 	use PhpOffice\PhpSpreadsheet\Spreadsheet;
 	use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 	use PhpOffice\PhpSpreadsheet\NamedRange;
-	//continuar con handler errors message !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+set_time_limit(300);
+
 $section = htmlspecialchars($_GET['section']);
 $operation = htmlspecialchars($_GET['op']);
+
 switch ($operation) {
 	case 'data':
-	set_time_limit(300);
 		$year = htmlspecialchars($_GET['year']);
 		$dateshow = $year."-".htmlspecialchars($_GET['month']);//$dateshow = $_SESSION['date'];
 		$date = date('Ym', strtotime($dateshow));
@@ -44,7 +45,7 @@ switch ($operation) {
 						$date = date('Y',strtotime($dateshow)).$report['month'];
 					}
 					$clausula = ($report['idcompany'] != 305) ? "and infs_columna in (3,9)" : "and infs_columna in (3,5)";
-					//oci_exec(sql_calcula($report['idcompany'],$report['report'],$date));
+					oci_exec(sql_calcula($report['idcompany'],$report['report'],$date));
 					data($spreadsheet, $report['idcompany'],$report['report'],$section, $clausula);
 				}
 				unset($reports); //vacia el arreglo
@@ -64,14 +65,14 @@ switch ($operation) {
 						$date = date('Y',strtotime($dateshow)).$report['month'];
 					}
 					$clausula = "";
-					// oci_exec(sql_calcula($report['idcompany'],$report['report'],$date)); //consulta ejecutiva por fecha asignada
+					oci_exec(sql_calcula($report['idcompany'],$report['report'],$date)); //consulta ejecutiva por fecha asignada
 					data($spreadsheet, $report['idcompany'],$report['report'],$section, $clausula);
 				}
 				unset($reports);
 			}
 
 			//imprimir ajustes 
-			$reports = squery("select t1.idcompany, t1.indexren, (t1.indexren + 15) indexrenAcum,  VAL, ACUM, t3.indexcol, t3.info_r
+			$reports = squery("select t1.idcompany, t1.indexren, (t1.indexren + 17) indexrenAcum,  VAL, ACUM, t3.indexcol, t3.info_r
 			FROM (select idcompany, descrip, indexren, SUM(value) ACUM from cfg_reports where (date_r between '$dateIni' and '$date') and type_c = 'mes' group by idcompany, indexren) t1
 			LEFT JOIN (select idcompany, indexren, value VAL from cfg_reports where date_r = '$date' 
 			and type_c = 'mes' group by idcompany, indexren) t2
@@ -90,6 +91,7 @@ switch ($operation) {
 					$sheet->setCellValue($letters[$col].$renAc, $reports[$i]['ACUM']);
 				}
 			unset($reports);	
+
 			$reports = squery("select t1.idcompany, t1.indexren, (t1.indexren + 8) indexrenAcum, VAL, ACUM, t3.indexcol, t3.info_r
 			FROM (select idcompany, descrip, indexren, type_c, SUM(value) ACUM from cfg_reports where (date_r between '$dateIni' and '$date') 
 			group by idcompany, indexren, type_c) t1
@@ -97,6 +99,7 @@ switch ($operation) {
 			ON (t1.indexren = t2.indexren and t1.idcompany=t2.idcompany and t1.type_c = t2.type_c) inner JOIN cfg_reports_col t3 
 			ON (t1.idcompany=t3.idcompany and t1.type_c = t3.info_r) WHERE info_r in ('division', 'capital', 'intereses', 'moneda') order by idcompany, info_r, indexren");
 			$spreadsheet->createSheet();
+			
 			$nSheets = $spreadsheet->getSheetCount();
 			$sheet = $spreadsheet->getSheet($nSheets-1);
 			$sheet->setTitle('division'); 
@@ -108,11 +111,30 @@ switch ($operation) {
 					$sheet->setCellValue($letters[$col].$renAc, $reports[$i]['ACUM']);
 				}
 		unset($reports);
+
+		//hoja tabla de tipo de cambios
+		$aaaa = date('Y', strtotime($dateshow));
+		$aaaaNext = $aaaa + 1;
+		$reports = squery("SELECT s.*, t.column01 column13 FROM summary s LEFT JOIN (select clave, column01 from summary where AAAA = '$aaaaNext') t ON s.clave=t.clave WHERE AAAA = '$aaaa' ORDER BY s.clave");
+			$spreadsheet->createSheet();
+			$nSheets = $spreadsheet->getSheetCount();
+			for ($i=0; $i < 4; $i++) { 
+				$sheet = $spreadsheet->getSheet($nSheets-1)->fromArray(
+				        $reports[$i],  // The data to set
+				        NULL,        // Array values with this value will not be set
+				        'B'.($i+1)   // Top left coordinate of the worksheet range where
+				                     //    we want to set these values (default is A1)
+				    );
+			}
+			$sheet->setTitle('tc-tabla'); 
+		unset($reports);
+
+
 		//reporte proyeccion del mes
 		$mnext =  date('Ym',strtotime($dateshow. " +1 month"));
 		$reports = squery("(select t1.idcompany, descrip, type_c, info_r, date_r, indexren, indexcol,  value VAL from cfg_reports t1 LEFT JOIN cfg_reports_col t2 ON (t1.idcompany=t2.idcompany) where type_c = 'pymes' and date_r = '$date') union
 			(select t1.idcompany, descrip, type_c, info_r, date_r, indexren + 15, indexcol,  value VAL from cfg_reports t1 
-			LEFT JOIN cfg_reports_col t2 ON (t1.idcompany=t2.idcompany) where type_c = 'pymes' and date_r = '$mnext')");
+			LEFT JOIN cfg_reports_col t2 ON (t1.idcompany=t2.idcompany) where type_c = 'pymes' and date_r = '$mnext')") ?? array();
 			$spreadsheet->createSheet();
 			$nSheets = $spreadsheet->getSheetCount();
 			$sheet = $spreadsheet->getSheet($nSheets-1);
@@ -137,6 +159,7 @@ switch ($operation) {
 		$dateright = substr(htmlspecialchars($_GET['year']), 2);
 		$macrokey = substr($section,0,3)."-". $dateright;
 		//exec('C:\Users\Administrador\Documents\ConsoleExcel\bin\Debug\ConsoleExcel.exe "inetpub\wwwroot\webindicator\files" "'.$section.'" "Div-'.$macrokey.'.xlsm"');
+		exec('C:\Users\opc\Documents\ConsoleExcel\bin\Debug\ConsoleExcel.exe "inetpub\wwwroot\webindicator\files" "'.$section.'" "Div-'.$macrokey.'.xlsm"');
 		break;
 	case 'readimages':
 		$list = array();
@@ -178,14 +201,16 @@ switch ($operation) {
 		FROM (select descrip, indexren, SUM(value) ACUM from cfg_reports where (date_r between '$dateIni' and '$date_r') and idcompany = '$idcompany' and type_c = '$type_c' group by idcompany, indexren) t1
 		LEFT JOIN (select descrip, indexren, value VAL from cfg_reports where date_r = '$date_r' 
 		and idcompany = '$idcompany' and type_c = '$type_c' group by idcompany, indexren) t2
-		ON (t1.indexren = t2.indexren)");
-		for ($i=0; $i < count($arr); $i++) { 
-			$table .= "<tr><td>".$arr[$i]['descrip']."</td>
-			<td>".$arr[$i]['VAL']."</td>
-			<td>".$arr[$i]['ACUM']."</td>
-			<td>".$arr[$i]['VAL']."</td></tr>";
+		ON (t1.indexren = t2.indexren)") ?? 0;
+		if ($arr > 0 ) {
+			for ($i=0; $i < count($arr); $i++) { 
+				$table .= "<tr><td>".$arr[$i]['descrip']."</td>
+				<td>".$arr[$i]['VAL']."</td>
+				<td>".$arr[$i]['ACUM']."</td>
+				<td>".$arr[$i]['VAL']."</td></tr>";
+			}
 		}
-	echo $table;
+	echo utf8_encode($table);
 	break;
 	case 'renglones':
 	$html = "";
@@ -195,7 +220,7 @@ switch ($operation) {
              $html .= "<option value='".$renglones[$i]['indexren']."'> ".$renglones[$i]['renglon']." </option>";
             } 
     unset($renglones);
-    echo $html; 
+    echo utf8_encode($html); 
 	break;
 	case 'companies':
 	$html = "";
@@ -205,7 +230,7 @@ switch ($operation) {
              $html .= "<option value='".$renglones[$i]['idcompany']."'> ".$renglones[$i]['renglon']." </option>";
             } 
     unset($renglones);
-    echo $html; 
+    echo utf8_encode($html); 
 	break;
 }
 
@@ -287,8 +312,8 @@ function StatusCheck($section){
 		}
 }
 function preStatus($date){
-	$result = oquery("SELECT sum(if(value > 0, 1, 0)) value FROM cfg_reports WHERE date_r = '$date' and type_c IN ('moneda','capital','intereses')");
-	 return ($result['value'] == 3) ? false : "Error! missing capture (intereses, capital, moneda)\n";
+	$result = oquery("SELECT sum(if(value > 0, 1, 0)) value FROM cfg_reports WHERE date_r = '$date' and type_c IN ('capital','intereses')");
+	return ($result['value'] == 2) ? false : "Error! missing capture (intereses, capital)\n";
 	 
 }
 

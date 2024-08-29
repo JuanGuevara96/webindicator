@@ -3,7 +3,7 @@ $(document).ready(function(){
 	$("[id='USA ALIMENTOS']").text("PROJECTION ALIMENTOS EU");
     $("#py-data").submit(function(e) {
     	e.preventDefault();
-    	var section = $("#span_section").children().attr("id");
+    	var section = $("#list_divs select[name=division]").val();
     	insertPy(section);
     });
     //radio buttons 
@@ -11,7 +11,7 @@ $(document).ready(function(){
          var test = $(this).val();
          if (test == "std") {
          	$('#py-std').removeClass("hide");
-         	$("#all_id").text("--- select company---");
+         	$("#all_id").text("--- select company ---");
          } else { 
          	$('#py-std').addClass("hide");
          	$("#all_id").text("--- all companies ---");
@@ -23,7 +23,7 @@ $(document).ready(function(){
 	}
 	else {
 		$('#py-std').removeClass("hide");
-		$("#all_id").text("--- select company---");
+		$("#all_id").text("--- select company ---");
 	}
 	
 //input numbers format comma with decimals
@@ -39,6 +39,10 @@ $(document).ready(function(){
 	});
 
 });
+
+
+/*----------------------------------   FUNCIONES  --------------------------------------*/
+
 function insertPy(section){
 	$.ajax({
 	    url: "op/py.php",
